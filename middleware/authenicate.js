@@ -1,6 +1,6 @@
 const jwt = require('jsonwebtoken');
 const config = require('../config/secretKey');
-const User = require('../model/user');
+const User = require('../model/User');
 
 exports.authencate = async (req, res, next) => {
     /*if (!req.headers.cookie) return res.status(401).send({ auth: false, message: 'No token provided.' });

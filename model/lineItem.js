@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const product = require('../model/product');
+const product = require('./Product');
 
 const lineItem = new mongoose.Schema({
    productId: {type: mongoose.Schema.Types.ObjectId, ref: product},

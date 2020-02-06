@@ -1,15 +1,17 @@
-const User = require('../model/user');
-const Cart = require('../model/cart');
+const UserController = require('../model/User');
+const Cart = require('../model/Cart');
 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const config = require('../config/secretKey');
 
+const parse = require('../helpers/getNumber');
+
 exports.register = async (req, res) =>{
     try {
         const {body: {name, email, password}} = req;
         const hashPassword = bcrypt.hashSync(password, 10);
-        const newUser = await User.create({
+        const newUser = await UserController.create({
             name, email, hashPassword,
         });
         Cart.create({userId: newUser._id});
@@ -27,7 +29,7 @@ exports.register = async (req, res) =>{
 exports.login = async (req, res) => {
     try{
         const {body: {email, password}} = req;
-        const user = await User.findOne({email: email});
+        const user = await UserController.findOne({email: email});
         if (!user) return res.status(404).send('email/password incorrect');
 
         const verify = bcrypt.compareSync(password, user.hashPassword);
@@ -44,7 +46,7 @@ exports.login = async (req, res) => {
 exports.update = async (req, res) => {
     try {
         const {userId, body: data} = req;
-        User.updateOne({_id: userId}, {$set: data});
+        UserController.updateOne({_id: userId}, {$set: data});
         res.status(200).send("Successfully update");
     } catch (e) {
         const message = e.message;
@@ -54,7 +56,7 @@ exports.update = async (req, res) => {
 
 exports.delete = async (req, res) => {
     try {
-        User.deleteOne({_id: req.userId});
+        UserController.deleteOne({_id: req.userId});
         res.status(200).send("Successfully Delete");
     } catch (e) {
         const message = e.message;
@@ -65,12 +67,12 @@ exports.delete = async (req, res) => {
 exports.changePassword = async (req, res) => {
     try {
         const {body: {old_password: oldPassword, new_password: newPassword}, userId} = req;
-        const user = await User.findOne({_id: userId});
+        const user = await UserController.findOne({_id: userId});
 
         const verify = bcrypt.compareSync(oldPassword, user.hashPassword);
         if (!verify) return res.status(200).send("Password don't match");
         const newHashPassword = bcrypt.hashSync(newPassword, 10);
-        User.updateOne({_id: userId}, {$set: {hashPassword: newHashPassword}});
+        UserController.updateOne({_id: userId}, {$set: {hashPassword: newHashPassword}});
 
         res.status(200).send('Password changed');
     } catch (e) {
@@ -81,7 +83,7 @@ exports.changePassword = async (req, res) => {
 
 exports.getSingleUser = async (req, res) => {
     try {
-        const user = await User.findById(req.userId).select({hashPassword: 0, _id: 0}).lean();
+        const user = await UserController.findById(req.userId).select({hashPassword: 0, _id: 0}).lean();
         res.status(200).send(user);
     } catch (e) {
         const message = e.message;
@@ -92,10 +94,13 @@ exports.getSingleUser = async (req, res) => {
 exports.getUsers = async (req, res) => {
     try {
         const {query: {page: pag, limit: lim, sort_by: sortType}, userId} = req;
-        const page = Math.max(Number(pag) || 1, 1);
-        const limit = Math.max(Number(lim) || 1, 1);
+        // const page = Math.max(Number(pag) || 1, 1);
+        // const limit = Math.max(Number(lim) || 1, 1);
 
-        const result = await User.find()
+        const page = await parse.getNumberIfPossitive(pag) || 1;
+        const limit = await parse.getNumberIfPossitive(lim) || 10;
+
+        const result = await UserController.find()
                                  .select({hashPassword: 0})
                                  .skip((page-1)*limit)
                                  .limit(limit)

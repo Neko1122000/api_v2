@@ -1,8 +1,8 @@
 const express = require('express');
-const user = require('../controller/user');
+const user = require('../controller/userController');
 const auth = require('../middleware/authenicate');
-const product = require('../controller/product');
-const cart = require('../controller/cart');
+const product = require('../controller/productController');
+const cart = require('../controller/cartController');
 
 const router = express.Router();
 

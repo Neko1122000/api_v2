@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const lineItem = require('../model/lineItem');
-const user = require('../model/user');
+const user = require('./User');
 
 const Cart = new mongoose.Schema({
     order: [{
